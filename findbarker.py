@@ -30,7 +30,7 @@ result_b7 = np.insert(randomVector, random_index, barker7)
 result_b11 = np.insert(randomVector, random_index, barker11)
 result_b13 = np.insert(randomVector, random_index, barker13)
     
-#cproducing correlation graphs to find peak index and value to locate barker code 
+#producing correlation graphs to find peak index and value to locate barker code 
 findBarkerInSignal7 = np.correlate(result_b7, barker7, mode='full') 
 peak_index7 = np.argmax(findBarkerInSignal7)
 peak_value7 = findBarkerInSignal7[peak_index7]
