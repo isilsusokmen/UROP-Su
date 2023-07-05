@@ -1,5 +1,3 @@
-#randomise vector, choose a location to insert barker code
-
 import numpy as np 
 import matplotlib.pyplot as plt
 
