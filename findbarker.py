@@ -12,11 +12,10 @@ b7_str = ''.join(str(barker7))
 b11_str = ''.join(str(barker11))
 b13_str = ''.join(str(barker13))
 
-#we are currently working with vectors, randomise a vector 
-#ensure the random vector doesn't host a barker sequence
+#we are currently working with vectors, randomise a vector
 found_barker = True 
 
-#at this stage checking if barker sequence exists in random signal by converting to string can also be done w convolution 
+#at this stage checking if barker sequence exists in random signal by converting to string - this can also be done w convolution 
 while found_barker:
     randomVector = np.random.randint(0, 2, 13)
     randomVector[np.where(randomVector == 0)] = -1
@@ -31,8 +30,7 @@ result_b7 = np.insert(randomVector, random_index, barker7)
 result_b11 = np.insert(randomVector, random_index, barker11)
 result_b13 = np.insert(randomVector, random_index, barker13)
     
-#producing correlating w barker graphs
-#find peak index and value in correlation to locate barker code 
+#cproducing correlation graphs to find peak index and value to locate barker code 
 findBarkerInSignal7 = np.correlate(result_b7, barker7, mode='full') 
 peak_index7 = np.argmax(findBarkerInSignal7)
 peak_value7 = findBarkerInSignal7[peak_index7]
