@@ -12,7 +12,7 @@ barker7 = [1, 1j, -1, 1j, -1, 1j, 1]
 barker11 = [1, 1j, -1, 1j, -1, 0-1j, -1, 1j, -1, 1j, 1]
 barker13 = [1, 1j, -1, 0-1j, 1, 0-1j, 1, 0-1j, 1, 0-1j, -1, 1j, 1]
 elements = [1,-1,1j,-1j]
-vector_length = 60
+vector_length = 100
 
 def check_barker_occurrence(vector):
     barker_patterns = [barker7, barker11, barker13]
@@ -37,14 +37,6 @@ def generate_vector_with_single_barker():
         if check_barker_occurrence(randomVector):  # it returns True if no Barker codes exist
             randomVector, barker_choice = inject_barker(randomVector)
             return randomVector, barker_choice
-    '''
-    while True:
-        randomVector = [random.choice(elements) for _ in range(vector_length)]
-        if check_barker_occurrence(randomVector):
-            randomVector, barker_choice = inject_barker(randomVector)
-            return randomVector, barker_choice
-    '''
-
 
 randomVector, barker_choice = generate_vector_with_single_barker()
 
@@ -62,38 +54,28 @@ plt.show()
 
 
 #function assumes probability matrix is normalized 
-def substitution_error(vector,error_rate, conf_matrix):
+def insertion_error(vector,error_rate, prob_matrix):
     
     barker_seq_w_errors=vector.copy()
     #mapping system 
     nucelotide_to_barker = {'A': 1, 'C': -1j, 'G':1j, 'T':-1}
     barker_to_nucleotide = {1: 'A', -1j: 'C', 1j: 'G', -1: 'T'}
 
-    for i in range(len(vector)):
-        
-        #check if error will occur for the nucelotide 
-        if np.random.rand() < error_rate:
-            barker_value = vector[i]
-        
-            #use confusion matrix for nucelotide substitution probabibilty 
-            probabilities = confusion_matrix[list(barker_to_nucleotide.keys()).index(barker_value)]
-            new_value = np.random.choice(list(barker_to_nucleotide.keys()), p=probabilities)
-            
-            barker_seq_w_errors[i] = new_value
-    
+    insert_indices = np.where(np.random.rand(len(barker_seq_w_errors)) < error_rate)[0]
+    insert_values = np.random.choice(list(nucelotide_to_barker.values()), p=prob_matrix, size=len(insert_indices))
+    nucleotides = np.array([barker_to_nucleotide[val] for val in insert_values])
+
+    # Insert nucleotides using boolean indexing
+    barker_seq_w_errors = np.insert(barker_seq_w_errors, insert_indices, nucleotides)
+
     return barker_seq_w_errors
 
-#the confusion matrix found in the course (A,C,G,T)- order mantained 
-confusion_matrix = [
-    [1.0, 0.0, 0.0, 0.0],
-    [0.0, 0.95, 0.05, 0.0],
-    [0.0, 0.05, 0.95, 0.0],
-    [0.0, 0.0, 0.0, 1.0]
-]
-error_rate = 0.8
+#assuming this matrix is normalized
+prob_matrix = [0.2,0.3,0.3,0.2]
+error_rate = 0.1
 
 #find barker with errors 
-barker_seq_w_errors = substitution_error(randomVector,error_rate,confusion_matrix)
+barker_seq_w_errors = insertion_error(randomVector,error_rate,prob_matrix)
 findBarkerInSignal_w_error = np.correlate(barker_seq_w_errors, barker_choice, mode='full') 
 peak_index2 = np.argmax(findBarkerInSignal_w_error)
 peak_value2 = findBarkerInSignal_w_error[peak_index2]
