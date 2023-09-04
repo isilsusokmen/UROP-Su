@@ -1,5 +1,7 @@
-#INPUT - error rate, confusion matrix 
-#OUTPUT - table with index of barker and peak value without error, error rate, and index of barker again 
+
+#for insertion error this model of the function - uses the nucleotide on the left of the index to insert a nucleotide
+#a condusion matrix perhaps can be used to determine the probability of the nucelotide insertion
+
 from tabulate import tabulate
 import numpy as np 
 import matplotlib.pyplot as plt
@@ -10,7 +12,7 @@ barker7 = [1, 1j, -1, 1j, -1, 1j, 1]
 barker11 = [1, 1j, -1, 1j, -1, 0-1j, -1, 1j, -1, 1j, 1]
 barker13 = [1, 1j, -1, 0-1j, 1, 0-1j, 1, 0-1j, 1, 0-1j, -1, 1j, 1]
 elements = [1,-1,1j,-1j]
-vector_length = 150
+vector_length = 60
 
 def check_barker_occurrence(vector):
     barker_patterns = [barker7, barker11, barker13]
@@ -35,6 +37,14 @@ def generate_vector_with_single_barker():
         if check_barker_occurrence(randomVector):  # it returns True if no Barker codes exist
             randomVector, barker_choice = inject_barker(randomVector)
             return randomVector, barker_choice
+    '''
+    while True:
+        randomVector = [random.choice(elements) for _ in range(vector_length)]
+        if check_barker_occurrence(randomVector):
+            randomVector, barker_choice = inject_barker(randomVector)
+            return randomVector, barker_choice
+    '''
+
 
 randomVector, barker_choice = generate_vector_with_single_barker()
 
@@ -50,25 +60,40 @@ plt.plot(peak_index, peak_value, 'ro', label='Peak')
 plt.legend()
 plt.show()
 
-#could use a probability matrix for deletion error - currently randomising the position of error
-def deletion_error(vector,error_rate):
+
+#function assumes probability matrix is normalized 
+def substitution_error(vector,error_rate, conf_matrix):
     
     barker_seq_w_errors=vector.copy()
-    index = 0
-    
-    while index < len(barker_seq_w_errors):
-        # Check if error will occur for the element
-        if random.random() < error_rate:
-            barker_seq_w_errors = np.delete(barker_seq_w_errors,index)
-        else:
-            index += 1 
+    #mapping system 
+    nucelotide_to_barker = {'A': 1, 'C': -1j, 'G':1j, 'T':-1}
+    barker_to_nucleotide = {1: 'A', -1j: 'C', 1j: 'G', -1: 'T'}
 
+    for i in range(len(vector)):
+        
+        #check if error will occur for the nucelotide 
+        if np.random.rand() < error_rate:
+            barker_value = vector[i]
+        
+            #use confusion matrix for nucelotide substitution probabibilty 
+            probabilities = confusion_matrix[list(barker_to_nucleotide.keys()).index(barker_value)]
+            new_value = np.random.choice(list(barker_to_nucleotide.keys()), p=probabilities)
+            
+            barker_seq_w_errors[i] = new_value
+    
     return barker_seq_w_errors
 
-error_rate = 0.1
+#the confusion matrix found in the course (A,C,G,T)- order mantained 
+confusion_matrix = [
+    [1.0, 0.0, 0.0, 0.0],
+    [0.0, 0.95, 0.05, 0.0],
+    [0.0, 0.05, 0.95, 0.0],
+    [0.0, 0.0, 0.0, 1.0]
+]
+error_rate = 0.8
 
 #find barker with errors 
-barker_seq_w_errors = deletion_error(randomVector,error_rate)
+barker_seq_w_errors = substitution_error(randomVector,error_rate,confusion_matrix)
 findBarkerInSignal_w_error = np.correlate(barker_seq_w_errors, barker_choice, mode='full') 
 peak_index2 = np.argmax(findBarkerInSignal_w_error)
 peak_value2 = findBarkerInSignal_w_error[peak_index2]
@@ -79,9 +104,3 @@ plt.plot(findBarkerInSignal_w_error)
 plt.plot(peak_index2, peak_value2, 'ro', label='Peak')
 plt.legend()
 plt.show()
-
-#comparing barker detection in sequences with/without error 
-table = [["Barker index", peak_index, peak_index2],
-         ["Barker peak value", f"{peak_value.real}+{peak_value.imag}j", f"{peak_value2.real}+{peak_value2.imag}j"],
-         ["Error Rate", 0, error_rate]]
-print(tabulate(table, headers=["", "Without Error", "With Deletion Error"]))
