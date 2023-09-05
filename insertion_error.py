@@ -58,16 +58,16 @@ def insertion_error(vector,error_rate, prob_matrix):
     
     barker_seq_w_errors=vector.copy()
     #mapping system 
-    nucelotide_to_barker = {'A': 1, 'C': -1j, 'G':1j, 'T':-1}
+    nucelotide_to_barker = {'A': 1, 'C': -1j, 'G': 1j, 'T': -1}
     barker_to_nucleotide = {1: 'A', -1j: 'C', 1j: 'G', -1: 'T'}
 
-    insert_indices = np.where(np.random.rand(len(barker_seq_w_errors)) < error_rate)[0]
-    insert_values = np.random.choice(list(nucelotide_to_barker.values()), p=prob_matrix, size=len(insert_indices))
-    nucleotides = np.array([barker_to_nucleotide[val] for val in insert_values])
-
-    # Insert nucleotides using boolean indexing
-    barker_seq_w_errors = np.insert(barker_seq_w_errors, insert_indices, nucleotides)
-
+    for i in range(len(vector)):
+        
+        #check if error will occur for the nucelotide 
+        if np.random.rand() < error_rate:
+            insert_value = np.random.choice(list(nucelotide_to_barker.values()), p=prob_matrix)
+            barker_seq_w_errors = np.insert(barker_seq_w_errors, i, insert_value)
+    
     return barker_seq_w_errors
 
 #assuming this matrix is normalized
@@ -86,3 +86,8 @@ plt.plot(findBarkerInSignal_w_error)
 plt.plot(peak_index2, peak_value2, 'ro', label='Peak')
 plt.legend()
 plt.show()
+
+table = [["Barker index", peak_index, peak_index2],
+         ["Barker peak value", f"{peak_value.real}+{peak_value.imag}j", f"{peak_value2.real}+{peak_value2.imag}j"],
+         ["Error Rate", 0, error_rate]]
+print(tabulate(table, headers=["", "Without Error", "With Insertion Error"]))
