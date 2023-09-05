@@ -61,8 +61,8 @@ def substitution_error(vector,error_rate, conf_matrix):
     
     barker_seq_w_errors=vector.copy()
     #mapping system 
-    nucelotide_to_barker = {'A': -1, 'C': -1j, 'G':1j, 'T':1}
-    barker_to_nucleotide = {-1: 'A', -1j: 'C', 1j: 'G', 1: 'T'}
+    nucelotide_to_barker = {'A': 1, 'C': 1j, 'G':0-1j, 'T':-1}
+    barker_to_nucleotide = {1: 'A', 1j: 'C', 0-1j: 'G', -1: 'T'}
 
     for i in range(len(vector)):
         
@@ -85,7 +85,7 @@ confusion_matrix = [
  [0.10, 0.25, 0.60, 0.05],
  [0.2, 0.0, 0.0, 0.80]
 ]
-error_rate = 0.4
+error_rate = 0.2
 
 
 #find barker with errors 
@@ -107,47 +107,3 @@ table = [["Barker index", peak_index, peak_index2],
          ["Barker peak value", f"{peak_value.real}+{peak_value.imag}j", f"{peak_value2.real}+{peak_value2.imag}j"],
          ["Error Rate", 0, error_rate]]
 print(tabulate(table, headers=["", "Without Error", "With Substitution Error"]))
-
-'''
-# Initialize an empty list to store results
-all_results = []
-
-# Iterate over different error rates
-for error_rate in np.arange(0.0, 1.1, 0.1):
-    error_rate_results = []
-
-    for _ in range(5):  # Run each error rate increment 5 times
-        randomVector, barker_choice = generate_vector_with_single_barker()
-        barker_choice = np.array(barker_choice)
-
-        findBarkerInSignal = np.correlate(randomVector, barker_choice, mode='full')
-        peak_index = np.argmax(findBarkerInSignal)
-        peak_value = findBarkerInSignal[peak_index]
-
-        barker_seq_w_errors = substitution_error(randomVector, error_rate, confusion_matrix)
-        barker_seq_w_errors = np.array(barker_seq_w_errors)
-        findBarkerInSignal_w_error = np.correlate(barker_seq_w_errors, barker_choice, mode='full')
-        peak_index2 = np.argmax(findBarkerInSignal_w_error)
-        peak_value2 = findBarkerInSignal_w_error[peak_index2]
-
-        table = [
-            ["Barker index", peak_index, peak_index2],
-            ["Barker peak value", "{}j".format(peak_value), "{}j".format(peak_value2)],
-            ["Error Rate", 0, error_rate]
-        ]
-
-        error_rate_results.append(table)
-
-    all_results.extend(error_rate_results)
-
-# Create a DataFrame from all results
-columns = ["", "Without Error", "With Substitution Error"]
-index = [f"Error Rate: {rate:.1f}" for rate in np.arange(0.0, 1.1, 0.1)] * 5
-df = pd.DataFrame(all_results, columns=columns, index=index)
-
-# Save the DataFrame to an Excel file
-excel_filename = "barker_results3.xlsx"
-df.to_excel(excel_filename)
-
-print("Results saved to", excel_filename)
-'''
